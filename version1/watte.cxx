@@ -18,15 +18,16 @@
 
 #include <clocale>
 #include <fstream>
+#include <iterator>
+#include <list>
 #include <string>
-#include <vector>
 #include <ncurses.h>
 
 // TODO: TAB key handling is really weird, so I ignore it for now
 // TODO: shifted keys are not ignored (and all printabled function keys)
 
 const std::string title = "Watte - weird and trivially tiny editor";
-const std::string version = "0.9.0";
+const std::string version = "0.9.1";
 
 class Editor {
 public:
@@ -120,7 +121,7 @@ public:
         // editor space
         for (int32_t i = 0; i < max_height; ++i)
         {
-            buffer = _data[i + _sline];
+            buffer = *std::next(_data.begin(), i + _sline);
             buffer.resize(COLS, ' ');
             mvaddnstr(i + 1, 0, buffer.c_str(), buffer.size());
         }
@@ -133,7 +134,8 @@ public:
         const char chr = key;
         int32_t lines_below = std::max(0, static_cast<int32_t>(_data.size()) - _sline);
         int32_t max_height = std::min(LINES - 2, lines_below);
-        int32_t max_width = std::min(COLS, static_cast<int32_t>(_data[_ypos + _sline - 1].size()));
+        int32_t max_width = std::min(COLS, static_cast<int32_t>(std::next(_data.begin(),
+                                           _ypos + _sline - 1)->size()));
         int32_t old_xpos = _xpos;
         int32_t old_ypos = _ypos;
 
@@ -161,7 +163,8 @@ public:
                 _ypos = std::max(_ypos - 1, 1);
                 if ((old_ypos == _ypos) && (_sline > 0))
                     --_sline;
-                max_width = std::min(COLS, static_cast<int32_t>(_data[_ypos + _sline - 1].size()));
+                max_width = std::min(COLS, static_cast<int32_t>(std::next(_data.begin(),
+                                           _ypos + _sline - 1)->size()));
                 _xpos = std::min(_xpos, max_width);
                 break;
 
@@ -169,7 +172,8 @@ public:
                 _ypos = std::min(_ypos + 1, max_height);
                 if ((old_ypos == _ypos) && ((lines_below - LINES + 2) > 0))
                     ++_sline;
-                max_width = std::min(COLS, static_cast<int32_t>(_data[_ypos + _sline - 1].size()));
+                max_width = std::min(COLS, static_cast<int32_t>(std::next(_data.begin(),
+                                           _ypos + _sline - 1)->size()));
                 _xpos = std::min(_xpos, max_width);
                 break;
 
@@ -183,32 +187,32 @@ public:
 
             case KEY_DC: // delete char = delete
                 if (_xpos < max_width)
-                    _data[_ypos + _sline - 1].erase(_xpos, 1);
+                    std::next(_data.begin(), _ypos + _sline - 1)->erase(_xpos, 1);
                 else if ((_ypos > 1) || (_sline > 0)) // line wrapping delete
                 {
-                    auto &next_line = _data[_ypos + _sline];
+                    auto &next_line = *std::next(_data.begin(), _ypos + _sline);
 
-                    _data[_ypos + _sline - 1] += next_line;
-                    _data.erase(_data.begin() + _ypos + _sline);
+                    *std::next(_data.begin(), _ypos + _sline - 1) += next_line;
+                    _data.erase(std::next(_data.begin(), _ypos + _sline));
                 }
                 break;
 
             case KEY_BACKSPACE:
                 if (_xpos > 0)
-                    _data[_ypos + _sline - 1].erase(_xpos-- - 1, 1);
+                    std::next(_data.begin(), _ypos + _sline - 1)->erase(_xpos-- - 1, 1);
                 else if ((_ypos > 1) || (_sline > 0)) // line wrapping backspace
                 {
-                    auto &prev_line = _data[_ypos + _sline - 2];
+                    auto &prev_line = *std::next(_data.begin(), _ypos + _sline - 2);
 
                     old_xpos = prev_line.size();
-                    prev_line += _data[_ypos + _sline - 1];
-                    _data.erase(_data.begin() + _ypos + _sline - 1);
+                    prev_line += *std::next(_data.begin(), _ypos + _sline - 1);
+                    _data.erase(std::next(_data.begin(), _ypos + _sline - 1));
 
                     _ypos = std::max(_ypos - 1, 1);
                     if ((old_ypos == _ypos) && (_sline > 0))
                         --_sline;
-                    max_width = std::min(COLS,
-                                         static_cast<int32_t>(_data[_ypos + _sline - 1].size()));
+                    max_width = std::min(COLS, static_cast<int32_t>(std::next(_data.begin(),
+                                               _ypos + _sline - 1)->size()));
                     _xpos = std::min(old_xpos, max_width);
                 }
                 break;
@@ -225,7 +229,8 @@ public:
                 _ypos = std::max(_ypos - (LINES / 2), 1);
                 if ((old_ypos == _ypos) && (_sline > 0))
                     _sline = std::max(_sline - (LINES / 2), 0);
-                max_width = std::min(COLS, static_cast<int32_t>(_data[_ypos + _sline - 1].size()));
+                max_width = std::min(COLS, static_cast<int32_t>(std::next(_data.begin(),
+                                           _ypos + _sline - 1)->size()));
                 _xpos = std::min(_xpos, max_width);
                 break;
 
@@ -233,20 +238,22 @@ public:
                 _ypos = std::min(_ypos + (LINES / 2), max_height);
                 if ((old_ypos == _ypos) && ((lines_below + LINES + 2) > 0))
                     _sline = std::min(_sline + (LINES / 2), lines_below);
-                max_width = std::min(COLS, static_cast<int32_t>(_data[_ypos + _sline - 1].size()));
+                max_width = std::min(COLS, static_cast<int32_t>(std::next(_data.begin(),
+                                           _ypos + _sline - 1)->size()));
                 _xpos = std::min(_xpos, max_width);
                 break;
 
             case KEY_ENTER:
             case 10:
                 if (_xpos == max_width)
-                    _data.insert(_data.begin() + _ypos + _sline, "");
+                    _data.insert(std::next(_data.begin(), _ypos + _sline), "");
                 else
                 {
-                    const std::string substr = _data[_ypos + _sline - 1].substr(_xpos);
+                    const std::string substr = std::next(_data.begin(),
+                                               _ypos + _sline - 1)->substr(_xpos);
 
-                    _data[_ypos + _sline - 1].erase(_xpos);
-                    _data.insert(_data.begin() + _ypos + _sline, substr);
+                    std::next(_data.begin(), _ypos + _sline - 1)->erase(_xpos);
+                    _data.insert(std::next(_data.begin(), _ypos + _sline), substr);
                 }
                 lines_below = std::max(0, static_cast<int32_t>(_data.size()) - _sline);
                 max_height = std::min(LINES - 2, lines_below);
@@ -258,7 +265,7 @@ public:
 
             default:
                 if (std::isprint(chr))
-                    _data[_ypos - 1 + _sline].insert(_xpos++, 1, chr);
+                    std::next(_data.begin(), _ypos + _sline -1)->insert(_xpos++, 1, chr);
         }
     }
 
@@ -295,7 +302,7 @@ public:
 
 private:
     //--- private properties ---
-    std::vector<std::string> _data;
+    std::list<std::string> _data;
     std::string _filename;
 #if DEBUG
     std::string _last_action;
