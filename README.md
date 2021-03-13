@@ -19,4 +19,4 @@ compiling. You should use lib musl for that to get some really impressive
 results (small size for a static binary).
 
 To compile it I usually run this:
-musl-gcc -std=c11 -flto -static -W -Wall -Wextra -Os -s -o watte watte.c -lncurses
+musl-gcc -std=c11 -flto -W -Wall -Wextra -Os -s -o watte watte.c

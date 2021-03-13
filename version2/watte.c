@@ -23,16 +23,27 @@
 #include <string.h>
 #include <unistd.h>
 
+#define STRING_MAX_SIZE 4096
 #define STRING_DEF_SIZE 128
 
-/*--- helper functions ---*/
+/*--- support functions ---*/
 
-void __zero(void *src, const size_t size)
+void __zero(void *src, size_t size)
 {
 	char *ptr = src;
 
 	for (size_t i = 0; i < size; ++i)
 		ptr[i] = 0;
+}
+
+size_t __length(const void *src, size_t size)
+{
+	const char *ptr = src;
+	size_t i;
+
+	for (i = 0; (i < size) || (ptr[i] == '\0'); ++i);
+
+	return i;
 }
 
 /*--- string structure and functions ---*/
@@ -72,7 +83,7 @@ void string_init(struct string *str)
 
 void string_init_from(struct string *str, const char *src)
 {
-	const size_t size = strlen(src) + 1;
+	const size_t size = __length(src, STRING_MAX_SIZE) + 1;
 
 	if (str) {
 		if (str->capacity >= size) {
