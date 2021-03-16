@@ -28,7 +28,7 @@
 
 /*--- support functions ---*/
 
-void __zero(void *src, size_t size)
+void _zero(void *src, size_t size)
 {
 	char *ptr = src;
 
@@ -36,7 +36,7 @@ void __zero(void *src, size_t size)
 		ptr[i] = 0;
 }
 
-size_t __length(const void *src, size_t size)
+size_t _length(const void *src, size_t size)
 {
 	const char *ptr = src;
 	size_t i;
@@ -56,65 +56,91 @@ struct string {
 
 void string_destroy(struct string *str)
 {
-	if (str) {
-		if (str->data) {
-			free(str->data);
-			str->data = NULL;
-		}
-		free(str);
-		str = NULL;
-	}
-}
+	if (!str)
+		return;
 
-void string_init(struct string *str)
-{
-	string_destroy(str);
-	str = (struct string *)malloc(sizeof (struct string));
-	if (str) {
-		str->data = (char *)malloc(STRING_DEF_SIZE);
-		if (str->data) {
-			str->length = 0;
-			str->capacity = STRING_DEF_SIZE;
-			__zero(str->data, STRING_DEF_SIZE);
-		} else
-			str->capacity = 0;
-	}
-}
-
-void string_init_from(struct string *str, const char *src)
-{
-	const size_t size = __length(src, STRING_MAX_SIZE) + 1;
-
-	if (str) {
-		if (str->capacity >= size) {
-			strncpy(str->data, src, size - 1);
-			__zero(str->data + size - 1, str->capacity);
-		} else {
-			str->data = (char *)realloc(str->data, size);
-			if (str->data) {
-				str->length = size - 1;
-				str->capacity = size;
-			} else {
-				str->length = 0;
-				str->capacity = 0;
-			}
-		}
-	} else {
-		str = (struct string *)malloc(size);
-		if (str) {
-			strncpy(str->data, src, size - 1);
-			str->length = size - 1;
-			str->capacity = size;
-		}
+	if (str->data) {
+		free(str->data);
+		str->length = 0;
+		str->capacity = 0;
+		str->data = NULL;
 	}
 }
 
 void string_clear(struct string *str)
 {
-	if (str && str->data) {
-		__zero(str->data, str->capacity);
+	if (!str)
+		return;
+
+	if (str->data) {
+		_zero(str->data, str->capacity);
 		str->length = 0;
 	}
+}
+
+void string_init(struct string *str)
+{
+	if (!str)
+		return;
+
+	if (str->data) {
+		if (str->capacity != STRING_DEF_SIZE) {
+			char *tmp = (char *)realloc(str->data, STRING_DEF_SIZE);
+
+			if (!tmp)
+				goto string_init_fail;
+			else
+				str->data = tmp;
+		}
+	} else {
+		str->data = (char *)malloc(STRING_DEF_SIZE);
+		if (!str->data)
+			goto string_init_fail;
+	}
+	str->length = 0;
+	str->capacity = STRING_DEF_SIZE;
+	string_clear(str);
+
+	return;
+
+string_init_fail:
+	if (str->data)
+		free(str->data);
+	str->length = 0;
+	str->capacity = 0;
+	str->data = NULL;
+}
+
+void string_init_from(struct string *str, const char *src)
+{
+	if (!str || !src)
+		return;
+
+	const size_t size = _length(src, STRING_MAX_SIZE);
+
+	if (str->data) {
+		char *tmp = (char *)realloc(str->data, size + 1);
+
+		if (!tmp)
+			return;
+
+		str->length = size;
+		str->capacity = size + 1;
+		str->data = tmp;
+	} else {
+		str->data = (char *)malloc(size + 1);
+
+		if (!str->data) {
+			str->length = 0;
+			str->capacity = 0;
+
+			return;
+		}
+	}
+
+	for (size_t i = 0; i < size; ++i)
+		str->data[i] = src[i];
+	str->data[size] = 0;
 }
 
 /*--- stringlist structure and functions ---*/
@@ -125,8 +151,8 @@ struct stringlist {
 /*--- editor structure and functions ---*/
 
 struct editor {
-	struct stringlist *data;
-	struct string *filename;
+	struct stringlist data;
+	struct string filename;
 	int32_t xpos;
 	int32_t ypos;
 	int32_t sline;
@@ -135,7 +161,7 @@ struct editor {
 
 int32_t editor_run(struct editor *ed, const char *filename)
 {
-	string_init_from(ed->filename, filename);
+	string_init_from(&ed->filename, filename);
 
 	while (ed->running)
 	{
@@ -150,14 +176,16 @@ int32_t editor_run(struct editor *ed, const char *filename)
 		ed->running = false;
 	}
 
-	string_destroy(ed->filename);
+	string_destroy(&ed->filename);
 
 	return 0;
 }
 
 int32_t main(int32_t argc, char **argv)
 {
-	struct editor ed = {NULL, NULL, 0, 0, 0, true};
+	struct editor ed;
+
+	_zero(&ed, sizeof (ed));
 
 	return editor_run(&ed, (argc == 2) ? argv[1] : "noname.txt");
 }
