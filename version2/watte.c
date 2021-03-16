@@ -1,5 +1,5 @@
 /*
- *  Watte - weird and trivially tiny editor
+ *  Watte 2 - weird and trivially tiny editor (C version)
  *  Copyright (C) 2020 Wilken 'Akiko' Gottwalt <akiko@linux-addicted.net>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,11 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 #define STRING_MAX_SIZE 4096
@@ -28,20 +28,31 @@
 
 /*--- support functions ---*/
 
-void _zero(void *src, size_t size)
+ssize_t _zero(void *src, ssize_t size)
 {
-	char *ptr = src;
+	if (!src)
+		return -EFAULT;
 
-	for (size_t i = 0; i < size; ++i)
+	char *ptr = src;
+	ssize_t i;
+
+	for (i = 0; i < size; ++i)
 		ptr[i] = 0;
+
+	return i;
 }
 
-size_t _length(const void *src, size_t size)
+ssize_t _length(const void *src, size_t size)
 {
+	if (!src)
+		return -EFAULT;
+
 	const char *ptr = src;
 	size_t i;
 
-	for (i = 0; (i < size) || (ptr[i] == '\0'); ++i);
+	for (i = 0; ptr[i] != '\0'; ++i)
+		if (i >= size)
+			return -ENOMEM;
 
 	return i;
 }
@@ -54,34 +65,42 @@ struct string {
 	char *data;
 };
 
-void string_destroy(struct string *str)
+ssize_t string_destroy(struct string *str)
 {
 	if (!str)
-		return;
+		return -EFAULT;
 
 	if (str->data) {
 		free(str->data);
-		str->length = 0;
-		str->capacity = 0;
 		str->data = NULL;
 	}
+	str->length = 0;
+	str->capacity = 0;
+
+	return 0;
 }
 
-void string_clear(struct string *str)
+ssize_t string_clear(struct string *str)
 {
 	if (!str)
-		return;
+		return -EFAULT;
+
+	ssize_t count = 0;
 
 	if (str->data) {
-		_zero(str->data, str->capacity);
+		count = _zero(str->data, str->capacity);
+		if (count < 0)
+			str->capacity = 0;
 		str->length = 0;
 	}
+
+	return count;
 }
 
-void string_init(struct string *str)
+ssize_t string_init(struct string *str)
 {
 	if (!str)
-		return;
+		return -EFAULT;
 
 	if (str->data) {
 		if (str->capacity != STRING_DEF_SIZE) {
@@ -99,9 +118,8 @@ void string_init(struct string *str)
 	}
 	str->length = 0;
 	str->capacity = STRING_DEF_SIZE;
-	string_clear(str);
 
-	return;
+	return string_clear(str);
 
 string_init_fail:
 	if (str->data)
@@ -109,20 +127,25 @@ string_init_fail:
 	str->length = 0;
 	str->capacity = 0;
 	str->data = NULL;
+
+	return -ENOMEM;
 }
 
-void string_init_from(struct string *str, const char *src)
+ssize_t string_init_from(struct string *str, const char *src)
 {
 	if (!str || !src)
-		return;
+		return -EFAULT;
 
-	const size_t size = _length(src, STRING_MAX_SIZE);
+	const ssize_t size = _length(src, STRING_MAX_SIZE);
+
+	if (size < 0)
+		return size;
 
 	if (str->data) {
 		char *tmp = (char *)realloc(str->data, size + 1);
 
 		if (!tmp)
-			return;
+			return -ENOMEM;
 
 		str->length = size;
 		str->capacity = size + 1;
@@ -134,13 +157,15 @@ void string_init_from(struct string *str, const char *src)
 			str->length = 0;
 			str->capacity = 0;
 
-			return;
+			return -ENOMEM;
 		}
 	}
 
-	for (size_t i = 0; i < size; ++i)
+	for (ssize_t i = 0; i < size; ++i)
 		str->data[i] = src[i];
 	str->data[size] = 0;
+
+	return size;
 }
 
 /*--- stringlist structure and functions ---*/
