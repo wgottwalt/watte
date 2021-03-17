@@ -59,13 +59,13 @@ ssize_t _length(const void *src, size_t size)
 
 /*--- string structure and functions ---*/
 
-struct string {
+struct string_t {
 	size_t length;
 	size_t capacity;
 	char *data;
 };
 
-ssize_t string_destroy(struct string *str)
+ssize_t string_destroy(struct string_t *str)
 {
 	if (!str)
 		return -EFAULT;
@@ -80,7 +80,7 @@ ssize_t string_destroy(struct string *str)
 	return 0;
 }
 
-ssize_t string_clear(struct string *str)
+ssize_t string_clear(struct string_t *str)
 {
 	if (!str)
 		return -EFAULT;
@@ -97,7 +97,7 @@ ssize_t string_clear(struct string *str)
 	return count;
 }
 
-ssize_t string_init(struct string *str)
+ssize_t string_init(struct string_t *str)
 {
 	if (!str)
 		return -EFAULT;
@@ -131,7 +131,7 @@ string_init_fail:
 	return -ENOMEM;
 }
 
-ssize_t string_init_from(struct string *str, const char *src)
+ssize_t string_init_from(struct string_t *str, const char *src)
 {
 	if (!str || !src)
 		return -EFAULT;
@@ -170,14 +170,14 @@ ssize_t string_init_from(struct string *str, const char *src)
 
 /*--- stringlist structure and functions ---*/
 
-struct stringlist {
+struct stringlist_t {
 };
 
 /*--- editor structure and functions ---*/
 
 struct editor {
-	struct stringlist data;
-	struct string filename;
+	struct stringlist_t data;
+	struct string_t filename;
 	int32_t xpos;
 	int32_t ypos;
 	int32_t sline;
