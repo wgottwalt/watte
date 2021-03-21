@@ -224,6 +224,44 @@ ssize_t stringlist_del_entry(struct stringlist_t *list)
 	return 1;
 }
 
+ssize_t stringlist_add_entry(struct stringlist_t *list, const bool before)
+{
+	if (!list)
+		return -EFAULT;
+
+	ssize_t count = 1;
+	struct stringlist_t *current = (struct stringlist_t *)malloc(sizeof (struct stringlist_t));
+
+	if (!current)
+		return -ENOMEM;
+
+	if (before) {
+		current->prev = list->prev;
+		current->next = list;
+	} else {
+		current->prev = list;
+		current->next = list->next;
+	}
+	count = string_init(&current->string);
+
+	if (count) {
+		list = current;
+		return 1;
+	}
+
+	return count;
+}
+
+ssize_t stringlist_add_entry_before(struct stringlist_t *list)
+{
+	return stringlist_add_entry(list, true);
+}
+
+size_t stringlist_add_entry_after(struct stringlist_t *list)
+{
+	return stringlist_add_entry(list, false);
+}
+
 ssize_t stringlist_destroy(struct stringlist_t *list)
 {
 	if (!list)
