@@ -224,10 +224,28 @@ ssize_t stringlist_del_entry(struct stringlist_t *list)
 	return 1;
 }
 
+ssize_t stringlist_destroy(struct stringlist_t *list)
+{
+	if (!list)
+		return -EFAULT;
+
+	ssize_t count = 0;
+	struct stringlist_t *current = list;
+
+	while (current++);
+
+	while (current) {
+		stringlist_del_entry(current);
+		++count;
+	}
+
+	return count;
+}
+
 /*--- editor structure and functions ---*/
 
 struct editor {
-	struct stringlist_t data;
+	struct stringlist_t *data;
 	struct string_t filename;
 	int32_t xpos;
 	int32_t ypos;
