@@ -201,6 +201,27 @@ struct stringlist_t {
 	struct stringlist_t *next;
 };
 
+ssize_t stringlist_length(struct stringlist_t *list)
+{
+	if (!list)
+		return -EFAULT;
+
+	ssize_t count = 0;
+	struct stringlist_t *current = list;
+
+	while (current) {
+		current = current->prev;
+		++count;
+	}
+	current = list->next;
+	while (current) {
+		current = current->next;
+		++count;
+	}
+
+	return count;
+}
+
 ssize_t stringlist_del_entry(struct stringlist_t *list)
 {
 	if (!list)
