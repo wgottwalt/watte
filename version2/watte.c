@@ -60,8 +60,8 @@ ssize_t _length(const void *src, size_t size)
 /*--- string structure and functions ---*/
 
 struct string_t {
-	size_t length;
-	size_t capacity;
+	ssize_t length;
+	ssize_t capacity;
 	char *data;
 };
 
