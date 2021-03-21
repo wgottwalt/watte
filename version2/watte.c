@@ -168,6 +168,31 @@ ssize_t string_init_from(struct string_t *str, const char *src)
 	return size;
 }
 
+ssize_t string_copy(struct string_t *dest, const struct string_t *src)
+{
+	if (!dest || !src)
+		return -EFAULT;
+
+	if ((dest->capacity + 1) <= src->length) {
+		char *tmp = (char *)realloc(dest->data, src->length + 1);
+
+		if (!tmp)
+			return -ENOMEM;
+
+		dest->data = tmp;
+		dest->capacity = src->length + 1;
+	}
+
+	dest->length = src->length;
+
+	for (ssize_t i = 0; i < src->length; ++i)
+		dest->data[i] = src->data[i];
+	for (ssize_t i = dest->length; i < dest->capacity; ++i)
+		dest->data[i] = 0;
+
+	return dest->length;
+}
+
 /*--- stringlist structure and functions ---*/
 
 struct stringlist_t {
