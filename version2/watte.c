@@ -196,7 +196,33 @@ ssize_t string_copy(struct string_t *dest, const struct string_t *src)
 /*--- stringlist structure and functions ---*/
 
 struct stringlist_t {
+	struct string_t string;
+	struct stringlist_t *prev;
+	struct stringlist_t *next;
 };
+
+ssize_t stringlist_del_entry(struct stringlist_t *list)
+{
+	if (!list)
+		return -EFAULT;
+
+	struct stringlist_t *current = NULL;
+
+	string_destroy(&list->string);
+
+	if (list->prev) {
+		current = list->prev;
+		current->next = list->next;
+	} else if (list->next) {
+		current = list->next;
+		current->next = list->next->next;
+	}
+
+	free(list);
+	list = current;
+
+	return 1;
+}
 
 /*--- editor structure and functions ---*/
 
