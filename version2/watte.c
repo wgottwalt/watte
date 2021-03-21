@@ -291,7 +291,8 @@ ssize_t stringlist_destroy(struct stringlist_t *list)
 	ssize_t count = 0;
 	struct stringlist_t *current = list;
 
-	while (current++);
+	while (current->prev)
+		current = current->prev;
 
 	while (current) {
 		stringlist_del_entry(current);
