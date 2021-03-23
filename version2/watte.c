@@ -250,8 +250,8 @@ ssize_t stringlist_add_entry(struct stringlist_t *list, const bool before)
 	if (!list)
 		return -EFAULT;
 
-	ssize_t count = 1;
 	struct stringlist_t *current = (struct stringlist_t *)malloc(sizeof (struct stringlist_t));
+	ssize_t count;
 
 	if (!current)
 		return -ENOMEM;
@@ -281,6 +281,30 @@ ssize_t stringlist_add_entry_before(struct stringlist_t *list)
 size_t stringlist_add_entry_after(struct stringlist_t *list)
 {
 	return stringlist_add_entry(list, false);
+}
+
+ssize_t stringlist_add_entry_from(struct stringlist_t *list, const char *src, const bool before)
+{
+	ssize_t err = stringlist_add_entry(list, before);
+
+	if (err < 0)
+		return err;
+
+	err = string_init_from(&list->string, src);
+	if (err < 0)
+		stringlist_del_entry(list);
+
+	return err;
+}
+
+ssize_t stringlist_add_entry_from_before(struct stringlist_t *list, const char *src)
+{
+	return stringlist_add_entry_from(list, src, true);
+}
+
+size_t stringlist_add_entry_from_after(struct stringlist_t *list, const char *src)
+{
+	return stringlist_add_entry_from(list, src, false);
 }
 
 ssize_t stringlist_destroy(struct stringlist_t *list)
@@ -334,6 +358,8 @@ int32_t editor_run(struct editor *ed, const char *filename)
 
 	return 0;
 }
+
+/*--- main ---*/
 
 int32_t main(int32_t argc, char **argv)
 {
