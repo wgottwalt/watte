@@ -32,7 +32,7 @@ const std::string version = "0.9.1";
 class Editor {
 public:
     //--- public constructors ---
-    Editor(const std::string &filename)
+    Editor(const char *filename)
     : _data(), _filename(filename),
 #if DEBUG
       _last_action(),
@@ -71,7 +71,7 @@ public:
     Editor(const Editor &rhs) = delete;
     Editor(Editor &&rhs) = delete;
 
-    ~Editor()
+    ~Editor() noexcept
     {
         ::endwin();
     }
@@ -129,7 +129,7 @@ public:
         ::move(_ypos, _xpos);
     }
 
-    void processInput(const int32_t key)
+    void processInput(const int32_t key) noexcept
     {
         const char chr = key;
         int32_t lines_below = std::max(0, static_cast<int32_t>(_data.size()) - _sline);
