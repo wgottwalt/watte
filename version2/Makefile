@@ -3,12 +3,15 @@ CC = gcc
 CFLAGS = -std=c11 -flto -fPIC -W -Wall -Wextra -Os -s
 LDFLAGS = -lncurses
 
-TARGET = watte
+OBJ = string.o stringlist.o support.o watte2.o
 
-all: $(TARGET)
+all: watte2
 
-$(TARGET): $(TARGET).c
-	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).c $(LDFLAGS)
+watte2: $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LDFLAGS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $<
 
 clean:
-	$(RM) $(TARGET)
+	$(RM) $(OBJ) watte2
