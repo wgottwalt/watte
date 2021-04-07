@@ -233,6 +233,17 @@ ssize_t stringlist_first(struct stringlist_t *list)
 	return 1;
 }
 
+ssize_t stringlist_last(struct stringlist_t *list)
+{
+	if (!list)
+		return -EFAULT;
+
+	while (list->next)
+		list = list->next;
+
+	return 1;
+}
+
 ssize_t stringlist_del_entry(struct stringlist_t *list)
 {
 	if (!list)
