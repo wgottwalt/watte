@@ -33,7 +33,7 @@ struct editor {
 	bool running;
 };
 
-int32_t editor_run(struct editor *ed, const char *filename)
+ssize_t editor_run(struct editor *ed, const char *filename)
 {
 	string_init_from(&ed->filename, filename);
 
@@ -63,5 +63,8 @@ int32_t main(int32_t argc, char **argv)
 
 	_zero(&ed, sizeof (ed));
 
-	return editor_run(&ed, (argc == 2) ? argv[1] : "noname.txt");
+	if (editor_run(&ed, (argc == 2) ? argv[1] : "noname.txt") >= 0)
+		return 0;
+
+	return 1;
 }
