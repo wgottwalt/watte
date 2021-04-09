@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +33,34 @@ struct editor {
 	int32_t sline;
 	bool running;
 };
+
+ssize_t editor_save(const char *filename, struct stringlist_t *data)
+{
+	FILE *fd = NULL;
+	ssize_t count = 0;
+	ssize_t err = 0;
+
+	if (!filename)
+		return -ENOENT;
+
+	fd = fopen(filename, "w");
+	if (!fd)
+		return -EIO;
+
+	err = stringlist_first(data);
+	if (err < 0)
+		return err;
+
+	while (data) {
+		err = fwrite(data->string.data, data->string.length, 1, fd);
+		if (err == 0)
+			return -EIO;
+		count += err;
+		data = data->next;
+	}
+
+	return count;
+}
 
 ssize_t editor_run(struct editor *ed, const char *filename)
 {
