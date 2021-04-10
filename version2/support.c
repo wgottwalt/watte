@@ -47,3 +47,13 @@ ssize_t _length(const void *src, size_t size)
 
 	return i;
 }
+
+ssize_t _min(const ssize_t a, const ssize_t b)
+{
+	return (a > b) ? b : a;
+}
+
+ssize_t _max(const ssize_t a, const ssize_t b)
+{
+	return (a > b) ? a : b;
+}

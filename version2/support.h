@@ -21,3 +21,5 @@
 
 ssize_t _zero(void *src, ssize_t size);
 ssize_t _length(const void *src, size_t size);
+ssize_t _min(const ssize_t a, const ssize_t b);
+ssize_t _max(const ssize_t a, const ssize_t b);
