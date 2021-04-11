@@ -32,4 +32,5 @@ ssize_t string_init(struct string_t *str);
 ssize_t string_init_from(struct string_t *str, const char *src);
 ssize_t string_clear(struct string_t *str);
 ssize_t string_copy(struct string_t *dest, const struct string_t *src);
+ssize_t string_concat(struct string_t *dest, const struct string_t *src);
 ssize_t string_destroy(struct string_t *str);

@@ -134,6 +134,31 @@ ssize_t string_copy(struct string_t *dest, const struct string_t *src)
 	return dest->length;
 }
 
+ssize_t string_concat(struct string_t *dest, const struct string_t *src)
+{
+	if (!dest || !src)
+		return -EFAULT;
+
+	ssize_t size = dest->length + src->length + 1;
+
+	if ((dest->capacity + 1) <= size) {
+		char *tmp = (char *)realloc(dest->data, size);
+
+		if (!tmp)
+			return -ENOMEM;
+
+		dest->data = tmp;
+		dest->capacity = size;
+	}
+
+	dest->length = size - 1;
+
+	for (ssize_t i = 0; i < src->length; ++i)
+		dest->data[i + dest->length] = src->data[i];
+
+	return dest->length;
+}
+
 ssize_t string_destroy(struct string_t *str)
 {
 	if (!str)
