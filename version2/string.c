@@ -87,7 +87,8 @@ ssize_t string_init_cstr(struct string_t *str, const char *src)
 
 	for (ssize_t i = 0; i < size; ++i)
 		str->data[i] = src[i];
-	str->data[size] = 0;
+	for (ssize_t i = str->length; i < str->capacity; ++i)
+		str->data[i] = 0;
 
 	return size;
 }
@@ -120,7 +121,8 @@ ssize_t string_init_string(struct string_t *str, const struct string_t *src)
 
 	for (ssize_t i = 0; i < (capacity - 1); ++i)
 		str->data[i] = src->data[i];
-	str->data[capacity - 1] = 0;
+	for (ssize_t i = str->length; i < str->capacity; ++i)
+		str->data[i] = 0;
 
 	return capacity - 1;
 }
