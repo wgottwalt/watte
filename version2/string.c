@@ -92,6 +92,39 @@ ssize_t string_init_cstr(struct string_t *str, const char *src)
 	return size;
 }
 
+ssize_t string_init_string(struct string_t *str, const struct string_t *src)
+{
+	if (!str || !src)
+		return -EFAULT;
+
+	const ssize_t capacity = _max(src->capacity, STRING_DEF_SIZE);
+
+	if (str->data) {
+		char *tmp = (char *)realloc(str->data, capacity);
+
+		if (!tmp)
+			return -ENOMEM;
+
+		str->length = capacity - 1;
+		str->capacity = capacity;
+		str->data = tmp;
+	} else {
+		str->data = (char *)malloc(capacity);
+		if (!str->data) {
+			str->length = 0;
+			str->capacity = 0;
+
+			return -ENOMEM;
+		}
+	}
+
+	for (ssize_t i = 0; i < (capacity - 1); ++i)
+		str->data[i] = src->data[i];
+	str->data[capacity - 1] = 0;
+
+	return capacity - 1;
+}
+
 ssize_t string_clear(struct string_t *str)
 {
 	if (!str)
