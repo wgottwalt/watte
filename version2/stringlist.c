@@ -110,7 +110,7 @@ ssize_t stringlist_add_entry_from(struct stringlist_t *list, const char *src, co
 	if (err < 0)
 		return err;
 
-	err = string_init_from(&list->string, src);
+	err = string_init_cstr(&list->string, src);
 	if (err < 0)
 		stringlist_del_entry(list);
 

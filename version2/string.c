@@ -55,7 +55,7 @@ string_init_fail:
 	return -ENOMEM;
 }
 
-ssize_t string_init_from(struct string_t *str, const char *src)
+ssize_t string_init_cstr(struct string_t *str, const char *src)
 {
 	if (!str || !src)
 		return -EFAULT;
