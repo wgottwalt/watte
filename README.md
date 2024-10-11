@@ -12,6 +12,13 @@ compiler (can be changed quite easily to only need C++11).
 To compile it I usually run this:
 g++ -std=c++17 -flto -W -Wall -Wextra -Os -s -o watte watte.cxx -lncurses
 
+You can also use the good old gnu make:
+make
+
+Or even compile it using Zig:
+zig build --release=small
+zig build run --summary all (to run it directly via Zig)
+
 version2: (not complete yet)
 
 This version is version1 but completely done in C11. This is ment for static
