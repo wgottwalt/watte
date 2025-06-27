@@ -4,7 +4,7 @@ const builtin = @import("builtin");
 comptime
 {
     if (builtin.zig_version.minor < 13)
-        @compileError("building watte with Zig required at leats Zig 0.13.0");
+        @compileError("building watte with Zig requires at least Zig 0.13.0");
 }
 
 fn compileBinary(b: *std.Build, name: []const u8, rootdir: []const u8, flags: []const []const u8,
